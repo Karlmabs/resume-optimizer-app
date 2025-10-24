@@ -1,0 +1,14 @@
+import { CoverLetter } from '@/types';
+
+export const sampleCoverLetter: CoverLetter = {
+  greeting: "Dear Hiring Manager at InnovateTech Solutions,",
+  opening: "I am writing to express my strong interest in the Senior Frontend Engineer position at InnovateTech Solutions. With over 5 years of experience architecting scalable web applications using React and TypeScript, combined with a proven track record in performance optimization and team mentorship, I am excited about the opportunity to contribute to your dynamic engineering team.",
+  body: [
+    "Throughout my career at Tech Corp, I have specialized in building high-performance, accessible web applications that serve hundreds of thousands of users. I led initiatives that reduced page load times by 45% and improved Core Web Vitals scores by 60%, directly impacting user engagement and business metrics. My expertise in React, TypeScript, and modern JavaScript frameworks aligns perfectly with your technical requirements, and I have consistently delivered scalable solutions that prioritize both performance and user experience.",
+    "What particularly excites me about this role is the opportunity to work on cutting-edge products while mentoring junior developers. At Tech Corp, I have mentored a team of 4 junior engineers, conducting thorough code reviews and establishing best practices for component architecture. I believe that building great products goes hand-in-hand with building great teams, and I am passionate about fostering a collaborative environment where engineers can grow and excel.",
+    "My experience with state management solutions like Redux and Context API, combined with my proficiency in integrating GraphQL and RESTful APIs, has enabled me to architect robust frontend systems that are both maintainable and scalable. I have also implemented comprehensive CI/CD pipelines and testing strategies using Jest and React Testing Library, ensuring code quality and reliability across all deployments. Additionally, my commitment to accessibility standards (WCAG 2.1 AA) ensures that the applications I build are inclusive and usable by all users.",
+    "I am impressed by InnovateTech Solutions' commitment to innovation and excellence in delivering exceptional user experiences. I am confident that my technical skills, leadership experience, and passion for frontend development make me an ideal candidate for this position. I am eager to bring my expertise in React, TypeScript, and performance optimization to your team and contribute to building products that delight users and drive business success."
+  ],
+  closing: "Thank you for considering my application. I look forward to the opportunity to discuss how my experience and skills can contribute to the continued success of InnovateTech Solutions. I am available for an interview at your convenience and can be reached at (555) 123-4567 or alex.johnson@email.com.",
+  signature: "Sincerely,\nAlex Johnson"
+};
