@@ -1,26 +1,14 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Brain, Sparkles, FileText, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Brain } from 'lucide-react';
 
 interface ProcessingAnimationProps {
   progress: number;
-  stage: string;
+  stage: string; // This is the real-time message from the backend!
 }
 
 export default function ProcessingAnimation({ progress, stage }: ProcessingAnimationProps) {
-  const stages = [
-    { name: 'Analyzing resume...', icon: FileText },
-    { name: 'Matching keywords...', icon: Sparkles },
-    { name: 'Optimizing content...', icon: Brain },
-    { name: 'Generating cover letter...', icon: Zap }
-  ];
-
-  const currentStageIndex = Math.min(
-    Math.floor(progress / 25),
-    stages.length - 1
-  );
-
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Animated background */}
@@ -30,7 +18,7 @@ export default function ProcessingAnimation({ progress, stage }: ProcessingAnima
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-2xl mx-auto px-6">
+      <div className="relative z-10 max-w-3xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -52,114 +40,109 @@ export default function ProcessingAnimation({ progress, stage }: ProcessingAnima
             <Brain className="w-12 h-12 text-violet-400" />
           </motion.div>
 
-          {/* Stage Title */}
+          {/* Title */}
           <h2 className="text-3xl font-bold text-slate-200 mb-4">
             AI is Working Its Magic
           </h2>
 
           <p className="text-slate-400 mb-8">
-            Optimizing your resume and generating a personalized cover letter
+            Watch the real-time progress as AI transforms your resume
           </p>
 
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-3 bg-slate-700 rounded-full overflow-hidden relative">
               <motion.div
-                className="h-full bg-gradient-to-r from-violet-500 to-purple-500"
+                className="h-full bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 relative overflow-hidden"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-              />
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                {/* Animated shimmer effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                  animate={{
+                    x: ['-100%', '200%']
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              </motion.div>
             </div>
 
+            <div className="flex justify-between items-center mt-3">
+              <motion.p
+                key={progress}
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-2xl font-bold text-violet-400"
+              >
+                {progress}%
+              </motion.p>
+              <motion.span
+                className="text-xs text-slate-500 uppercase tracking-wider"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {progress < 100 ? 'Processing...' : 'Complete!'}
+              </motion.span>
+            </div>
+          </div>
+
+          {/* Real-time Status Message */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={stage} // Re-animate when message changes
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20"
+            >
+              <div className="flex items-center justify-center gap-3">
+                {/* Animated thinking dots */}
+                {progress < 100 && (
+                  <div className="flex gap-1.5">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-2 h-2 bg-violet-400 rounded-full"
+                        animate={{
+                          scale: [1, 1.5, 1],
+                          opacity: [0.5, 1, 0.5]
+                        }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          delay: i * 0.15
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Actual message from backend */}
+                <p className="text-lg font-medium text-slate-200">
+                  {stage || 'Initializing...'}
+                </p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Helpful tip */}
+          {progress > 30 && progress < 100 && (
             <motion.p
-              key={progress}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-sm text-slate-500 mt-2"
+              transition={{ delay: 0.5 }}
+              className="mt-6 text-sm text-slate-500"
             >
-              {progress}% Complete
+              💡 Tip: The AI is analyzing every detail to make you the perfect candidate for this role
             </motion.p>
-          </div>
-
-          {/* Stages */}
-          <div className="space-y-4">
-            {stages.map((stageItem, index) => {
-              const Icon = stageItem.icon;
-              const isComplete = index < currentStageIndex;
-              const isCurrent = index === currentStageIndex;
-
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`
-                    flex items-center gap-4 p-4 rounded-xl
-                    transition-all duration-300
-                    ${isCurrent ? 'bg-violet-500/10 border border-violet-500/30' : 'bg-slate-800/30'}
-                    ${isComplete ? 'opacity-50' : ''}
-                  `}
-                >
-                  <motion.div
-                    className={`
-                      w-10 h-10 rounded-lg flex items-center justify-center
-                      ${isCurrent ? 'bg-violet-500/20' : 'bg-slate-700/50'}
-                    `}
-                    animate={isCurrent ? {
-                      scale: [1, 1.2, 1],
-                    } : {}}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    <Icon className={`w-5 h-5 ${isCurrent ? 'text-violet-400' : 'text-slate-500'}`} />
-                  </motion.div>
-
-                  <span className={`text-sm font-medium ${isCurrent ? 'text-slate-200' : 'text-slate-500'}`}>
-                    {stageItem.name}
-                  </span>
-
-                  {isCurrent && (
-                    <motion.div
-                      className="ml-auto flex gap-1"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      {[0, 1, 2].map((i) => (
-                        <motion.div
-                          key={i}
-                          className="w-1.5 h-1.5 bg-violet-400 rounded-full"
-                          animate={{
-                            scale: [1, 1.5, 1],
-                            opacity: [1, 0.5, 1]
-                          }}
-                          transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            delay: i * 0.2
-                          }}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-
-                  {isComplete && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="ml-auto w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center"
-                    >
-                      <div className="w-2 h-2 bg-green-400 rounded-full" />
-                    </motion.div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
+          )}
         </motion.div>
       </div>
 

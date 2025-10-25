@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 import LandingPage from '@/components/LandingPage';
 import ProcessingAnimation from '@/components/ProcessingAnimation';
 import ResultsPage from '@/components/ResultsPage';
-import { sampleResume } from '@/data/sampleResume';
-import { sampleJobDescription } from '@/data/sampleJobDescription';
-import { sampleOptimizedResume } from '@/data/sampleOptimizedResume';
-import { sampleCoverLetter } from '@/data/sampleCoverLetter';
+import { OptimizedResume, CoverLetter, Resume } from '@/types';
+import { getWebSocketService } from '@/services/websocketService';
 
 type AppState = 'landing' | 'processing' | 'results';
 
@@ -16,51 +15,92 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState('');
 
-  useEffect(() => {
-    if (appState === 'processing') {
-      // Simulate processing stages
-      const stages = [
-        { progress: 25, stage: 'Analyzing resume...', duration: 1000 },
-        { progress: 50, stage: 'Matching keywords...', duration: 1500 },
-        { progress: 75, stage: 'Optimizing content...', duration: 1500 },
-        { progress: 100, stage: 'Generating cover letter...', duration: 1000 }
-      ];
+  // Results state
+  const [optimizedResume, setOptimizedResume] = useState<OptimizedResume | null>(null);
+  const [coverLetter, setCoverLetter] = useState<CoverLetter | null>(null);
+  const [jobKeywords, setJobKeywords] = useState<string[]>([]);
+  const [originalResume, setOriginalResume] = useState<Resume | null>(null);
 
-      let currentStageIndex = 0;
+  const parseResumeFile = async (file: File): Promise<Resume> => {
+    const formData = new FormData();
+    formData.append('file', file);
 
-      const processStage = () => {
-        if (currentStageIndex < stages.length) {
-          const currentStage = stages[currentStageIndex];
-          setProgress(currentStage.progress);
-          setStage(currentStage.stage);
+    const response = await fetch('http://localhost:8000/api/parse-resume', {
+      method: 'POST',
+      body: formData,
+    });
 
-          setTimeout(() => {
-            currentStageIndex++;
-            if (currentStageIndex < stages.length) {
-              processStage();
-            } else {
-              // Processing complete, show results
-              setTimeout(() => {
-                setAppState('results');
-              }, 500);
-            }
-          }, currentStage.duration);
-        }
-      };
-
-      processStage();
+    if (!response.ok) {
+      throw new Error('Failed to parse resume');
     }
-  }, [appState]);
 
-  const handleGenerate = () => {
+    const data = await response.json();
+    return data.resume;
+  };
+
+  const handleGenerate = async (selectedFile: File | null, jobDescription: string) => {
+    if (!selectedFile) {
+      toast.error('Please upload a resume');
+      return;
+    }
+
+    if (!jobDescription || jobDescription.trim().length < 50) {
+      toast.error('Please enter a job description (at least 50 characters)');
+      return;
+    }
+
     setProgress(0);
     setStage('');
     setAppState('processing');
+
+    try {
+      // Parse the uploaded resume
+      const parsedResume = await parseResumeFile(selectedFile);
+      setOriginalResume(parsedResume);
+
+      const wsService = getWebSocketService();
+
+      // Connect to backend WebSocket
+      await wsService.connect();
+
+      // Handle incoming messages
+      wsService.onMessage((message) => {
+        if (message.type === 'progress') {
+          setProgress(message.progress);
+          setStage(message.message);
+        } else if (message.type === 'result') {
+          setOptimizedResume(message.data.optimizedResume);
+          setCoverLetter(message.data.coverLetter);
+          setJobKeywords(message.data.jobKeywords);
+          setAppState('results');
+          wsService.disconnect();
+        } else if (message.type === 'error') {
+          toast.error(`Error: ${message.message}`);
+          console.error('Backend error:', message.message);
+          setAppState('landing');
+          wsService.disconnect();
+        }
+      });
+
+      // Send optimization request to backend with actual data
+      wsService.sendOptimizeRequest(
+        parsedResume,
+        jobDescription
+      );
+    } catch (error) {
+      console.error('Failed to process resume:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to process resume. Please ensure the backend server is running on port 8000.');
+      setAppState('landing');
+    }
   };
 
   const handleRestart = () => {
     setProgress(0);
     setStage('');
+    setOptimizedResume(null);
+    setCoverLetter(null);
+    setJobKeywords([]);
+    setOriginalResume(null);
     setAppState('landing');
   };
 
@@ -74,12 +114,12 @@ export default function Home() {
         <ProcessingAnimation progress={progress} stage={stage} />
       )}
 
-      {appState === 'results' && (
+      {appState === 'results' && optimizedResume && coverLetter && originalResume && (
         <ResultsPage
-          originalResume={sampleResume}
-          optimizedResume={sampleOptimizedResume}
-          coverLetter={sampleCoverLetter}
-          jobKeywords={sampleJobDescription.keywords}
+          originalResume={originalResume}
+          optimizedResume={optimizedResume}
+          coverLetter={coverLetter}
+          jobKeywords={jobKeywords}
           onRestart={handleRestart}
         />
       )}

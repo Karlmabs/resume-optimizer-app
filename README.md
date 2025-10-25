@@ -1,53 +1,120 @@
 # AI-Powered Resume & Cover Letter Optimizer
 
-A beautiful, modern web application that optimizes resumes and generates personalized cover letters based on job descriptions. Built with Next.js, TypeScript, Tailwind CSS, and Framer Motion.
+A beautiful, modern full-stack web application that optimizes resumes and generates personalized cover letters using OpenAI GPT-4. Features real-time WebSocket updates for live progress tracking.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.0-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Python](https://img.shields.io/badge/Python-3.9+-green)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109-teal)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)
-![License](https://img.shields.io/badge/license-MIT-green)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-412991)
 
-## Features
+## ✨ Features
 
-### Core Functionality
-- **Resume Upload**: Drag-and-drop file upload supporting PDF and DOCX formats
-- **Job Description Analysis**: Paste job descriptions to match requirements
-- **AI-Powered Optimization**: Simulated AI processing with realistic stages
-- **Cover Letter Generation**: Automatically generated personalized cover letters
-- **Keyword Matching**: Visual representation of matched keywords from job descriptions
-- **Before/After Comparison**: Toggle between original and optimized resumes
+### 🎯 Core Functionality
+- **Real AI Optimization**: OpenAI GPT-4 powered resume enhancement
+- **Live WebSocket Updates**: Real-time progress streaming (25% → 50% → 75% → 100%)
+- **Intelligent Parsing**: Support for PDF, DOCX, and Markdown files
+- **Cover Letter Generation**: AI-generated personalized cover letters
+- **Keyword Analysis**: Automatic keyword extraction and matching
+- **Before/After Comparison**: Toggle between original and optimized versions
+- **Multi-Format Export**: Download as TXT or Markdown
 
-### User Experience
-- **Typewriter Effect**: Real-time text generation simulation (10-20 seconds)
-- **Processing Animation**: Beautiful loading states with progress tracking
-- **Toast Notifications**: User-friendly feedback for actions
-- **Download Functionality**: Export resumes and cover letters as text files
-- **Copy to Clipboard**: Quick copy functionality for all documents
-- **Responsive Design**: Fully responsive across mobile, tablet, and desktop
+### 🚀 User Experience
+- **Typewriter Effect**: Smooth character-by-character content reveal
+- **Processing Animations**: Beautiful loading states with progress tracking
+- **Toast Notifications**: Real-time feedback for all actions
+- **Glassmorphism UI**: Modern frosted-glass design elements
+- **Responsive Design**: Fully responsive across all devices
+- **Dark Theme**: Professional dark mode with violet/purple accents
 
-### Design & Aesthetics
-- **Glassmorphism Effects**: Modern glass-like UI elements
-- **Gradient Backgrounds**: Animated gradient backgrounds with blob effects
-- **Smooth Animations**: Framer Motion powered micro-interactions
-- **Custom Scrollbars**: Styled scrollbars matching the theme
-- **Dark Theme**: Professional dark color palette with violet/purple accents
+### 🏗️ Architecture
+- **Frontend**: Next.js 16 with TypeScript & Tailwind CSS
+- **Backend**: Python FastAPI with async/await
+- **AI**: OpenAI GPT-4 Turbo
+- **Real-Time**: WebSocket bidirectional communication
+- **Data Format**: JSON-first with Markdown support
 
-## Tech Stack
+## 🛠️ Tech Stack
 
+### Frontend
 - **Framework**: Next.js 16.0 (App Router)
 - **Language**: TypeScript 5.0
 - **Styling**: Tailwind CSS 4.0
 - **Animations**: Framer Motion 12.x
 - **Icons**: Lucide React
 - **Notifications**: React Hot Toast
-- **Fonts**: Geist Sans & Geist Mono
 
-## Getting Started
+### Backend
+- **Framework**: FastAPI (Python 3.9+)
+- **AI**: OpenAI API (GPT-4)
+- **WebSocket**: Native FastAPI WebSockets
+- **File Parsing**: PyPDF2, python-docx
+- **Data Validation**: Pydantic
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Node.js 18.x or higher
-- npm, yarn, pnpm, or bun
+- Python 3.9 or higher
+- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
+
+### 1. Clone & Install
+
+```bash
+# Navigate to project directory
+cd resume-optimizer-app
+
+# Install frontend dependencies
+npm install
+
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
+cd ..
+```
+
+### 2. Configure Backend
+
+```bash
+# Create backend .env file
+cd backend
+cp .env.example .env
+```
+
+Edit `backend/.env` and add your OpenAI API key:
+```env
+OPENAI_API_KEY=sk-your-openai-api-key-here
+PORT=8000
+```
+
+### 3. Run Both Servers
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+python main.py
+```
+Backend runs on `http://localhost:8000`
+
+**Terminal 2 - Frontend:**
+```bash
+npm run dev
+```
+Frontend runs on `http://localhost:3000`
+
+### 4. Use the App
+
+1. Open `http://localhost:3000` in your browser
+2. Toggle "Use Real Backend" checkbox (bottom right)
+3. Upload a resume or enter job description
+4. Click "Generate Optimized Resume"
+5. Watch the real-time AI magic happen! ✨
+
+## 📖 Detailed Setup
+
+### Frontend Setup
 
 ### Installation
 

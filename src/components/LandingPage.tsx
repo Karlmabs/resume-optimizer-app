@@ -7,14 +7,18 @@ import FileUpload from './FileUpload';
 import JobDescriptionInput from './JobDescriptionInput';
 
 interface LandingPageProps {
-  onGenerate: () => void;
+  onGenerate: (file: File | null, jobDescription: string) => void;
 }
 
 export default function LandingPage({ onGenerate }: LandingPageProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
 
-  const canGenerate = selectedFile !== null || jobDescription.length > 50;
+  const canGenerate = selectedFile !== null && jobDescription.length > 50;
+
+  const handleGenerateClick = () => {
+    onGenerate(selectedFile, jobDescription);
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -81,7 +85,7 @@ export default function LandingPage({ onGenerate }: LandingPageProps) {
 
             {/* Generate Button */}
             <motion.button
-              onClick={onGenerate}
+              onClick={handleGenerateClick}
               disabled={!canGenerate}
               className={`
                 w-full py-4 px-8 rounded-2xl font-semibold text-lg
@@ -106,7 +110,7 @@ export default function LandingPage({ onGenerate }: LandingPageProps) {
                 animate={{ opacity: 1 }}
                 className="text-center text-sm text-slate-500 mt-4"
               >
-                Please upload a resume or enter a job description to continue
+                {!selectedFile ? 'Please upload a resume' : 'Please enter a job description (at least 50 characters)'}
               </motion.p>
             )}
           </div>

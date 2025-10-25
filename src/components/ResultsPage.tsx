@@ -8,6 +8,7 @@ import { OptimizedResume, CoverLetter, Resume } from '@/types';
 import ResumeDisplay from './ResumeDisplay';
 import CoverLetterDisplay from './CoverLetterDisplay';
 import KeywordMatch from './KeywordMatch';
+import ChangesSummary from './ChangesSummary';
 import { downloadResume, downloadCoverLetter, downloadResumeAsMarkdown, downloadCoverLetterAsMarkdown, copyToClipboard } from '@/utils/downloadUtils';
 
 interface ResultsPageProps {
@@ -106,6 +107,12 @@ export default function ResultsPage({
             Start Over
           </motion.button>
         </motion.div>
+
+        {/* Changes Summary */}
+        <ChangesSummary
+          changes={optimizedResume.changes}
+          matchScore={optimizedResume.matchScore}
+        />
 
         {/* Keyword Match */}
         <KeywordMatch
