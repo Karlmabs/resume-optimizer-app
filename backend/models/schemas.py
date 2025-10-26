@@ -7,6 +7,7 @@ class ContactInfo(BaseModel):
     phone: str
     location: Optional[str] = ""
     linkedin: Optional[str] = None
+    github: Optional[str] = None
     website: Optional[str] = None
 
 class Experience(BaseModel):
