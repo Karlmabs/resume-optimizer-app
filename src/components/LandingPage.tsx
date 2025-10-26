@@ -1,23 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import FileUpload from './FileUpload';
-import JobDescriptionInput from './JobDescriptionInput';
 
 interface LandingPageProps {
-  onGenerate: (file: File | null, jobDescription: string) => void;
+  onGenerate: (file: File | null) => void;
+  isParsing: boolean;
 }
 
-export default function LandingPage({ onGenerate }: LandingPageProps) {
+export default function LandingPage({ onGenerate, isParsing }: LandingPageProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [jobDescription, setJobDescription] = useState('');
 
-  const canGenerate = selectedFile !== null && jobDescription.length > 50;
+  const canGenerate = selectedFile !== null && !isParsing;
 
   const handleGenerateClick = () => {
-    onGenerate(selectedFile, jobDescription);
+    if (!isParsing) {
+      onGenerate(selectedFile);
+    }
   };
 
   return (
@@ -68,18 +69,20 @@ export default function LandingPage({ onGenerate }: LandingPageProps) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="max-w-5xl mx-auto"
+          className="max-w-3xl mx-auto"
         >
           <div className="glass-strong rounded-3xl p-8 md:p-12">
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-slate-200 mb-2 text-center">
+                Step 1: Upload Your Resume
+              </h2>
+              <p className="text-sm text-slate-400 text-center mb-6">
+                We'll parse your resume and let you verify all the extracted information
+              </p>
+
               <FileUpload
                 selectedFile={selectedFile}
                 onFileSelect={setSelectedFile}
-              />
-
-              <JobDescriptionInput
-                value={jobDescription}
-                onChange={setJobDescription}
               />
             </div>
 
@@ -99,18 +102,28 @@ export default function LandingPage({ onGenerate }: LandingPageProps) {
               whileHover={canGenerate ? { scale: 1.02 } : {}}
               whileTap={canGenerate ? { scale: 0.98 } : {}}
             >
-              <Sparkles className="w-5 h-5" />
-              Generate Optimized Resume
-              <ArrowRight className="w-5 h-5" />
+              {isParsing ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Parsing Resume...
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  Parse My Resume
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </motion.button>
 
-            {!canGenerate && (
+            {!canGenerate && !isParsing && (
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="text-center text-sm text-slate-500 mt-4"
               >
-                {!selectedFile ? 'Please upload a resume' : 'Please enter a job description (at least 50 characters)'}
+                Please upload a resume to continue
               </motion.p>
             )}
           </div>
@@ -125,16 +138,16 @@ export default function LandingPage({ onGenerate }: LandingPageProps) {
         >
           {[
             {
-              title: 'Keyword Optimization',
+              title: 'Smart Parsing',
+              description: 'AI extracts all information from your resume with verification before optimization'
+            },
+            {
+              title: 'Job-Targeted Optimization',
               description: 'Match your resume to job requirements with AI-powered keyword analysis'
             },
             {
-              title: 'Personalized Cover Letters',
-              description: 'Generate compelling cover letters tailored to each position'
-            },
-            {
-              title: 'Instant Results',
-              description: 'Get your optimized documents in seconds with real-time generation'
+              title: 'Cover Letter Generation',
+              description: 'Get personalized cover letters tailored to each specific position'
             }
           ].map((feature, index) => (
             <motion.div

@@ -27,8 +27,15 @@ export class WebSocketService {
   private ws: WebSocket | null = null;
   private url: string;
 
-  constructor(url: string = 'ws://localhost:8000/ws/optimize') {
-    this.url = url;
+  constructor(url?: string) {
+    if (url) {
+      this.url = url;
+    } else {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      // Convert http/https to ws/wss
+      const wsUrl = apiUrl.replace(/^https?:/, 'ws:').replace(/^http:/, 'ws:');
+      this.url = `${wsUrl}/ws/optimize`;
+    }
   }
 
   connect(): Promise<void> {

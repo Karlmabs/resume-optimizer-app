@@ -5,7 +5,7 @@ class ContactInfo(BaseModel):
     name: str
     email: str
     phone: str
-    location: str
+    location: Optional[str] = ""
     linkedin: Optional[str] = None
     website: Optional[str] = None
 
@@ -13,7 +13,7 @@ class Experience(BaseModel):
     id: str
     company: str
     position: str
-    location: str
+    location: Optional[str] = ""
     startDate: str
     endDate: str
     description: List[str]
@@ -24,7 +24,7 @@ class Education(BaseModel):
     institution: str
     degree: str
     field: str
-    location: str
+    location: Optional[str] = ""
     startDate: str
     endDate: str
     gpa: Optional[str] = None

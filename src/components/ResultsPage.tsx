@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, Eye, FileText, Mail } from 'lucide-react';
+import { RotateCcw, Eye, FileText, Mail, FileCode, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { OptimizedResume, CoverLetter, Resume } from '@/types';
 import ResumeDisplay from './ResumeDisplay';
@@ -16,6 +16,8 @@ interface ResultsPageProps {
   optimizedResume: OptimizedResume;
   coverLetter: CoverLetter;
   jobKeywords: string[];
+  extractedText: string;
+  parsingWarnings: string[];
   onRestart: () => void;
 }
 
@@ -24,10 +26,13 @@ export default function ResultsPage({
   optimizedResume,
   coverLetter,
   jobKeywords,
+  extractedText,
+  parsingWarnings,
   onRestart
 }: ResultsPageProps) {
   const [activeTab, setActiveTab] = useState<'resume' | 'cover-letter'>('resume');
   const [showBefore, setShowBefore] = useState(false);
+  const [showExtractedText, setShowExtractedText] = useState(false);
 
   const handleDownloadResume = () => {
     downloadResume(showBefore ? originalResume : optimizedResume,
@@ -158,24 +163,70 @@ export default function ResultsPage({
           </motion.button>
 
           {activeTab === 'resume' && (
-            <motion.button
-              onClick={() => setShowBefore(!showBefore)}
-              className={`
-                ml-auto flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                transition-all duration-300
-                ${showBefore
-                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                  : 'bg-slate-800/30 text-slate-400 border border-slate-600/30 hover:bg-slate-700/30'
-                }
-              `}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Eye className="w-4 h-4" />
-              {showBefore ? 'View Optimized' : 'View Original'}
-            </motion.button>
+            <>
+              <motion.button
+                onClick={() => setShowExtractedText(!showExtractedText)}
+                className={`
+                  ml-auto flex items-center gap-2 px-4 py-3 rounded-xl font-medium
+                  transition-all duration-300
+                  ${showExtractedText
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    : 'bg-slate-800/30 text-slate-400 border border-slate-600/30 hover:bg-slate-700/30'
+                  }
+                `}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                title="View raw text extracted from your file"
+              >
+                <FileCode className="w-4 h-4" />
+                Extracted Text
+              </motion.button>
+
+              <motion.button
+                onClick={() => setShowBefore(!showBefore)}
+                className={`
+                  flex items-center gap-2 px-6 py-3 rounded-xl font-medium
+                  transition-all duration-300
+                  ${showBefore
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                    : 'bg-slate-800/30 text-slate-400 border border-slate-600/30 hover:bg-slate-700/30'
+                  }
+                `}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Eye className="w-4 h-4" />
+                {showBefore ? 'View Optimized' : 'View Base Resume'}
+              </motion.button>
+            </>
           )}
         </div>
+
+        {/* Parsing Warnings Banner */}
+        {parsingWarnings.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-orange-300 mb-2">
+                  Parsing Warnings Detected
+                </h3>
+                <ul className="text-sm text-orange-200/80 space-y-1">
+                  {parsingWarnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+                <p className="text-xs text-orange-300/60 mt-2">
+                  Consider using the Edit mode to correct any missing information.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Content Area */}
         <motion.div
@@ -220,6 +271,46 @@ export default function ResultsPage({
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Extracted Text Modal */}
+        <AnimatePresence>
+          {showExtractedText && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+              onClick={() => setShowExtractedText(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="glass-strong rounded-3xl p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-slate-200">Extracted Text</h2>
+                  <button
+                    onClick={() => setShowExtractedText(false)}
+                    className="text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="text-sm text-slate-400 mb-4">
+                  This is the raw text extracted from your resume file before AI parsing.
+                </p>
+                <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700">
+                  <pre className="text-sm text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
+                    {extractedText || 'No text extracted'}
+                  </pre>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   );

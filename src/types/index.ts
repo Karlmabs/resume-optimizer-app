@@ -76,3 +76,24 @@ export interface ProcessingState {
   stage: 'idle' | 'uploading' | 'analyzing' | 'optimizing' | 'generating' | 'complete';
   progress: number;
 }
+
+export type FieldStatus = 'empty' | 'partial' | 'complete' | 'warning';
+
+export interface FieldValidation {
+  status: FieldStatus;
+  message?: string;
+}
+
+export interface ResumeValidation {
+  contact: {
+    name: FieldValidation;
+    email: FieldValidation;
+    phone: FieldValidation;
+    location: FieldValidation;
+  };
+  summary: FieldValidation;
+  experience: FieldValidation[];
+  education: FieldValidation[];
+  skills: FieldValidation;
+  overallScore: number; // 0-100
+}

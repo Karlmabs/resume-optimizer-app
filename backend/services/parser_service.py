@@ -19,8 +19,12 @@ class FileParserService:
             self.use_ai_parsing = False
             print("⚠️ Warning: OPENAI_API_KEY not set. Using fallback regex parsing (less reliable)")
 
-    def parse_file(self, file_content: bytes, file_type: str) -> Resume:
-        """Parse file content based on file type"""
+    def parse_file(self, file_content: bytes, file_type: str) -> tuple[Resume, str]:
+        """Parse file content based on file type
+
+        Returns:
+            tuple: (parsed_resume, extracted_text)
+        """
         if file_type == 'application/pdf':
             text = self._parse_pdf(file_content)
         elif file_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']:
@@ -30,11 +34,22 @@ class FileParserService:
         else:
             text = file_content.decode('utf-8')
 
+        # Log extracted text for debugging
+        print(f"\n{'='*80}")
+        print(f"📄 EXTRACTED TEXT ({len(text)} characters):")
+        print(f"{'='*80}")
+        print(text[:1000])  # Print first 1000 chars
+        if len(text) > 1000:
+            print(f"\n... ({len(text) - 1000} more characters)")
+        print(f"{'='*80}\n")
+
         # Use AI-powered parsing if available, otherwise fallback to regex
         if self.use_ai_parsing:
-            return self._parse_with_ai(text)
+            resume = self._parse_with_ai(text)
         else:
-            return self._parse_text_to_resume(text)
+            resume = self._parse_text_to_resume(text)
+
+        return resume, text
 
     def _parse_pdf(self, content: bytes) -> str:
         """Extract text from PDF"""
@@ -59,80 +74,108 @@ class FileParserService:
     def _parse_with_ai(self, text: str) -> Resume:
         """Use AI (GPT-4) to intelligently parse resume text into structured JSON"""
 
-        prompt = f"""You are an expert resume parser. Extract structured information from the following resume text and return it as valid JSON.
+        prompt = f"""You are an EXPERT resume parser with ZERO TOLERANCE for data loss. Your job is to extract EVERY SINGLE DETAIL from this resume with PERFECT accuracy.
 
-Resume Text:
+📄 RESUME TEXT TO PARSE:
 {text}
 
-Extract and return ONLY a valid JSON object with this EXACT structure:
+🚨 CRITICAL PARSING RULES - FOLLOW EXACTLY:
+
+1. **PRESERVE EVERYTHING** - Extract 100% of the content, word-for-word
+2. **NO SUMMARIZING** - Copy text exactly as written, don't paraphrase
+3. **NO SKIPPING** - Every bullet point, achievement, skill must be captured
+4. **NO ASSUMPTIONS** - Only extract what's actually written
+5. **MAINTAIN ORDER** - Keep experiences and education in the order they appear
+
+📋 REQUIRED JSON STRUCTURE:
+
 {{
   "contact": {{
-    "name": "Full Name",
-    "email": "email@example.com",
-    "phone": "Phone number",
-    "location": "City, State or Country",
-    "linkedin": "LinkedIn URL (if present)",
-    "website": "Personal website (if present)"
+    "name": "EXACT full name from resume",
+    "email": "EXACT email address",
+    "phone": "EXACT phone number with original formatting",
+    "location": "EXACT location string",
+    "linkedin": "LinkedIn URL if present, else empty",
+    "website": "Personal website if present, else empty"
   }},
-  "summary": "Professional summary or objective statement (if present)",
+  "summary": "COMPLETE professional summary - copy WORD FOR WORD, preserving ALL sentences and details",
   "experience": [
     {{
       "id": "exp1",
-      "company": "Company Name",
-      "position": "Job Title",
-      "location": "City, State",
-      "startDate": "Start Date",
-      "endDate": "End Date or Present",
+      "company": "EXACT company name",
+      "position": "EXACT job title",
+      "location": "EXACT location",
+      "startDate": "EXACT start date in original format",
+      "endDate": "EXACT end date or 'Present'",
       "description": [
-        "Achievement or responsibility 1",
-        "Achievement or responsibility 2"
+        "COMPLETE first bullet - word for word, including ALL metrics and details",
+        "COMPLETE second bullet - preserve ALL information exactly",
+        "EVERY SINGLE BULLET POINT - no matter how many there are"
       ]
+    }},
+    {{
+      "id": "exp2",
+      "NOTE": "Include EVERY job, internship, or position mentioned"
     }}
   ],
   "education": [
     {{
       "id": "edu1",
-      "institution": "University/School Name",
-      "degree": "Degree Type",
-      "field": "Major/Field of Study",
-      "location": "City, State",
-      "startDate": "Start Date",
-      "endDate": "End Date",
-      "gpa": "GPA if mentioned",
-      "achievements": "Honors, awards, or achievements if mentioned"
+      "institution": "EXACT school/university name",
+      "degree": "EXACT degree name (e.g., Bachelor of Science, Master of Arts)",
+      "field": "EXACT major/field of study",
+      "location": "EXACT location if mentioned",
+      "startDate": "EXACT start date",
+      "endDate": "EXACT graduation date",
+      "gpa": "EXACT GPA if mentioned (e.g., '3.8/4.0')",
+      "achievements": ["ALL honors", "awards", "dean's list", "scholarships - copy exactly as separate items"]
+    }},
+    {{
+      "id": "edu2",
+      "NOTE": "Include EVERY degree, certification, or educational entry"
     }}
   ],
   "skills": [
     {{
-      "category": "Category Name (e.g., Programming Languages, Tools, etc.)",
-      "items": ["Skill 1", "Skill 2", "Skill 3"]
+      "category": "EXACT category name from resume (e.g., 'Programming Languages', 'Tools & Technologies')",
+      "items": ["EVERY", "SINGLE", "SKILL", "LISTED", "in", "this", "category"]
+    }},
+    {{
+      "category": "ANOTHER category if present",
+      "items": ["ALL skills in this category too"]
     }}
   ]
 }}
 
-Instructions:
-- Extract ALL information present in the resume
-- Be thorough and accurate
-- If information is missing, use empty string "" or empty array []
-- Do NOT make up information that isn't in the resume
-- Parse dates in their original format
-- Group skills into logical categories
-- Include ALL work experiences and education entries
-- Extract bullet points as separate array items in description
-- Return ONLY valid JSON, no additional text or explanation"""
+⚠️ VALIDATION CHECKLIST (ensure ALL are true before submitting):
+□ Every bullet point from experience section is captured
+□ Every skill mentioned is in the skills array
+□ Every degree/certification is in education
+□ All dates are preserved in original format
+□ All metrics and numbers are included (e.g., "increased by 50%")
+□ Complete professional summary with no sentences missing
+□ Contact info is complete and accurate
+□ NO information was summarized or condensed
+□ NO bullet points were combined or shortened
+
+🎯 QUALITY STANDARD:
+The parsed resume should contain AT LEAST 80% of the character count of the original text. If you find yourself with a much shorter result, you're missing content - GO BACK and extract everything.
+
+Return ONLY the valid JSON object, no additional text."""
 
         try:
             response = self.client.chat.completions.create(
                 model="gpt-4-turbo-preview",  # Can also use "gpt-3.5-turbo" for cost savings
                 messages=[
-                    {"role": "system", "content": "You are an expert resume parser. Always return valid JSON matching the exact schema provided."},
+                    {"role": "system", "content": "You are an EXPERT resume parser with ZERO tolerance for data loss. You extract EVERY detail word-for-word with PERFECT accuracy. You NEVER summarize, skip content, or lose information. Always return complete, thorough JSON matching the exact schema."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,  # Low temperature for consistent, accurate parsing
+                temperature=0.05,  # Very low temperature for maximum accuracy and consistency
                 response_format={"type": "json_object"}
             )
 
             result = json.loads(response.choices[0].message.content)
+            print(f"✅ Successfully parsed AI response")
 
             # Validate and ensure required fields exist
             if not result.get('contact'):
@@ -144,10 +187,35 @@ Instructions:
             if not result.get('skills'):
                 result['skills'] = []
 
+            # Normalize education achievements to be a list
+            print(f"🔍 Normalizing {len(result.get('education', []))} education entries...")
+            for i, edu in enumerate(result.get('education', [])):
+                if 'achievements' in edu:
+                    print(f"   Education {i}: achievements type = {type(edu['achievements'])}")
+                    if isinstance(edu['achievements'], str):
+                        print(f"   Converting achievements from string to list...")
+                        # Convert string to list by splitting on common delimiters
+                        achievements_str = edu['achievements']
+                        # Split on common delimiters: comma, semicolon, or newline
+                        achievements = [a.strip() for a in achievements_str.replace(';', ',').split(',') if a.strip()]
+                        edu['achievements'] = achievements if achievements else None
+                        print(f"   ✅ Converted to list with {len(achievements)} items")
+
+            # Also normalize experience achievements
+            print(f"🔍 Normalizing {len(result.get('experience', []))} experience entries...")
+            for i, exp in enumerate(result.get('experience', [])):
+                if 'achievements' in exp and isinstance(exp['achievements'], str):
+                    achievements_str = exp['achievements']
+                    achievements = [a.strip() for a in achievements_str.replace(';', ',').split(',') if a.strip()]
+                    exp['achievements'] = achievements if achievements else None
+                    print(f"   Experience {i}: ✅ Converted achievements to list")
+
+            print(f"✅ About to create Resume object...")
             return Resume(**result)
 
         except Exception as e:
-            print(f"⚠️ AI parsing failed: {e}. Falling back to regex parsing.")
+            print(f"⚠️ AI parsing failed: {type(e).__name__}: {e}")
+            print(f"   Falling back to regex parsing.")
             return self._parse_text_to_resume(text)
 
     def _parse_text_to_resume(self, text: str) -> Resume:
