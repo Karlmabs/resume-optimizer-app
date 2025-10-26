@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import LandingPage from '@/components/LandingPage';
+import ResumeBuilder from '@/components/ResumeBuilder';
 import ResumeReview from '@/components/ResumeReview';
 import JobDescriptionScreen from '@/components/JobDescriptionScreen';
 import ProcessingAnimation from '@/components/ProcessingAnimation';
@@ -10,7 +11,7 @@ import ResultsPage from '@/components/ResultsPage';
 import { OptimizedResume, CoverLetter, Resume } from '@/types';
 import { getWebSocketService } from '@/services/websocketService';
 
-type AppState = 'landing' | 'review' | 'job-description' | 'processing' | 'results';
+type AppState = 'landing' | 'builder' | 'review' | 'job-description' | 'processing' | 'results';
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('landing');
@@ -174,10 +175,37 @@ export default function Home() {
     setAppState('landing');
   };
 
+  const handleBuildFromScratch = () => {
+    setAppState('builder');
+  };
+
+  const handleBuilderComplete = (resume: Resume) => {
+    // Save the resume built from scratch
+    setOriginalResume(resume);
+    // Go to review state
+    setAppState('review');
+  };
+
+  const handleBuilderCancel = () => {
+    setAppState('landing');
+  };
+
   return (
     <main>
       {appState === 'landing' && (
-        <LandingPage onGenerate={handleGenerate} isParsing={isParsing} />
+        <LandingPage
+          onGenerate={handleGenerate}
+          isParsing={isParsing}
+          onBuildFromScratch={handleBuildFromScratch}
+        />
+      )}
+
+      {appState === 'builder' && (
+        <ResumeBuilder
+          initialData={originalResume}
+          onComplete={handleBuilderComplete}
+          onCancel={handleBuilderCancel}
+        />
       )}
 
       {appState === 'review' && originalResume && (

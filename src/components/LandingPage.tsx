@@ -8,9 +8,10 @@ import FileUpload from './FileUpload';
 interface LandingPageProps {
   onGenerate: (file: File | null) => void;
   isParsing: boolean;
+  onBuildFromScratch: () => void;
 }
 
-export default function LandingPage({ onGenerate, isParsing }: LandingPageProps) {
+export default function LandingPage({ onGenerate, isParsing, onBuildFromScratch }: LandingPageProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const canGenerate = selectedFile !== null && !isParsing;
@@ -126,6 +127,25 @@ export default function LandingPage({ onGenerate, isParsing }: LandingPageProps)
                 Please upload a resume to continue
               </motion.p>
             )}
+
+            {/* Build from Scratch Link */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-center mt-6"
+            >
+              <p className="text-sm text-slate-400 mb-2">
+                Don't have a resume yet?
+              </p>
+              <button
+                onClick={onBuildFromScratch}
+                className="text-sm text-violet-400 hover:text-violet-300 underline underline-offset-4 transition-colors flex items-center gap-2 mx-auto"
+              >
+                Build one from scratch
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </motion.div>
           </div>
         </motion.div>
 
