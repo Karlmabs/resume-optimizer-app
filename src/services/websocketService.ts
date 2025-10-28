@@ -7,7 +7,16 @@ interface ProgressUpdate {
   message: string;
 }
 
-interface ResultUpdate {
+interface ParseResultUpdate {
+  type: 'result';
+  data: {
+    resume: Resume;
+    extractedText: string;
+    warnings: string[];
+  };
+}
+
+interface OptimizeResultUpdate {
   type: 'result';
   data: {
     optimizedResume: OptimizedResume;
@@ -21,20 +30,20 @@ interface ErrorUpdate {
   message: string;
 }
 
-type WebSocketMessage = ProgressUpdate | ResultUpdate | ErrorUpdate;
+type WebSocketMessage = ProgressUpdate | ParseResultUpdate | OptimizeResultUpdate | ErrorUpdate;
 
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private url: string;
 
-  constructor(url?: string) {
+  constructor(endpoint: 'parse' | 'optimize' = 'optimize', url?: string) {
     if (url) {
       this.url = url;
     } else {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       // Convert http/https to ws/wss
       const wsUrl = apiUrl.replace(/^https?:/, 'ws:').replace(/^http:/, 'ws:');
-      this.url = `${wsUrl}/ws/optimize`;
+      this.url = `${wsUrl}/ws/${endpoint}`;
     }
   }
 
@@ -44,7 +53,7 @@ export class WebSocketService {
         this.ws = new WebSocket(this.url);
 
         this.ws.onopen = () => {
-          console.log('WebSocket connected');
+          console.log('WebSocket connected to', this.url);
           resolve();
         };
 
@@ -60,6 +69,30 @@ export class WebSocketService {
         reject(error);
       }
     });
+  }
+
+  async sendParseRequest(file: File): Promise<void> {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket is not connected');
+    }
+
+    // Convert file to base64
+    const fileContent = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    this.ws.send(JSON.stringify({
+      type: 'parse',
+      fileContent,
+      fileType: file.type,
+      fileName: file.name
+    }));
   }
 
   sendOptimizeRequest(resume: Resume, jobDescription: string, jobTitle?: string, company?: string) {
@@ -101,12 +134,17 @@ export class WebSocketService {
   }
 }
 
-// Singleton instance
-let wsServiceInstance: WebSocketService | null = null;
+// Factory function to create WebSocket services
+export const createWebSocketService = (endpoint: 'parse' | 'optimize'): WebSocketService => {
+  return new WebSocketService(endpoint);
+};
+
+// Singleton instance for optimization (backwards compatibility)
+let wsOptimizeServiceInstance: WebSocketService | null = null;
 
 export const getWebSocketService = (): WebSocketService => {
-  if (!wsServiceInstance) {
-    wsServiceInstance = new WebSocketService();
+  if (!wsOptimizeServiceInstance) {
+    wsOptimizeServiceInstance = new WebSocketService('optimize');
   }
-  return wsServiceInstance;
+  return wsOptimizeServiceInstance;
 };

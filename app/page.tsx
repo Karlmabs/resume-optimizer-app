@@ -9,9 +9,9 @@ import JobDescriptionScreen from '@/components/JobDescriptionScreen';
 import ProcessingAnimation from '@/components/ProcessingAnimation';
 import ResultsPage from '@/components/ResultsPage';
 import { OptimizedResume, CoverLetter, Resume } from '@/types';
-import { getWebSocketService } from '@/services/websocketService';
+import { getWebSocketService, createWebSocketService } from '@/services/websocketService';
 
-type AppState = 'landing' | 'builder' | 'review' | 'job-description' | 'processing' | 'results';
+type AppState = 'landing' | 'builder' | 'review' | 'job-description' | 'processing' | 'results' | 'parsing';
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('landing');
@@ -27,42 +27,57 @@ export default function Home() {
   const [extractedText, setExtractedText] = useState<string>('');
   const [parsingWarnings, setParsingWarnings] = useState<string[]>([]);
 
-  const parseResumeFile = async (file: File): Promise<Resume> => {
-    const formData = new FormData();
-    formData.append('file', file);
+  const parseResumeFileWithWebSocket = async (file: File): Promise<void> => {
+    const wsService = createWebSocketService('parse');
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${apiUrl}/api/parse-resume`, {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      // Connect to WebSocket
+      await wsService.connect();
 
-    if (!response.ok) {
-      let errorMessage = 'Failed to parse resume';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.detail || errorMessage;
-      } catch (e) {
-        // If response is not JSON, use status text
-        errorMessage = response.statusText || errorMessage;
-      }
-      throw new Error(errorMessage);
-    }
+      // Handle incoming messages
+      wsService.onMessage((message) => {
+        if (message.type === 'progress') {
+          setProgress(message.progress);
+          setStage(message.message);
+        } else if (message.type === 'result') {
+          // Parse result
+          const data = message.data as { resume: Resume; extractedText: string; warnings: string[] };
 
-    const data = await response.json();
+          setOriginalResume(data.resume);
+          setExtractedText(data.extractedText || '');
+          setParsingWarnings(data.warnings || []);
 
-    // Store extracted text and warnings for debugging
-    setExtractedText(data.extractedText || '');
-    setParsingWarnings(data.warnings || []);
+          // Show warnings to user if any
+          if (data.warnings && data.warnings.length > 0) {
+            data.warnings.forEach((warning: string) => {
+              toast.error(warning, { duration: 5000 });
+            });
+          }
 
-    // Show warnings to user if any
-    if (data.warnings && data.warnings.length > 0) {
-      data.warnings.forEach((warning: string) => {
-        toast.error(warning, { duration: 5000 });
+          // Small delay to show completion
+          setTimeout(() => {
+            setAppState('review');
+            setIsParsing(false);
+            wsService.disconnect();
+          }, 500);
+        } else if (message.type === 'error') {
+          toast.error(`Error: ${message.message}`);
+          console.error('Backend error:', message.message);
+          setAppState('landing');
+          setIsParsing(false);
+          wsService.disconnect();
+        }
       });
-    }
 
-    return data.resume;
+      // Send parse request
+      await wsService.sendParseRequest(file);
+    } catch (error) {
+      console.error('Failed to parse resume:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to parse resume. Please ensure the backend server is running on port 8000.');
+      setAppState('landing');
+      setIsParsing(false);
+      wsService.disconnect();
+    }
   };
 
   // Store job description for later use
@@ -75,22 +90,19 @@ export default function Home() {
     }
 
     setIsParsing(true);
+    setProgress(0);
+    setStage('');
+
+    // Switch to parsing state to show progress animation
+    setAppState('parsing');
 
     try {
-      // Parse the uploaded resume
-      const parsedResume = await parseResumeFile(selectedFile);
-      setOriginalResume(parsedResume);
-
-      // Small delay to ensure user sees the success state
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Go to review state
-      setAppState('review');
+      // Parse the uploaded resume with WebSocket for live updates
+      await parseResumeFileWithWebSocket(selectedFile);
     } catch (error) {
       console.error('Failed to parse resume:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to parse resume. Please ensure the backend server is running on port 8000.');
       setAppState('landing');
-    } finally {
       setIsParsing(false);
     }
   };
@@ -198,6 +210,10 @@ export default function Home() {
           isParsing={isParsing}
           onBuildFromScratch={handleBuildFromScratch}
         />
+      )}
+
+      {appState === 'parsing' && (
+        <ProcessingAnimation progress={progress} stage={stage} />
       )}
 
       {appState === 'builder' && (

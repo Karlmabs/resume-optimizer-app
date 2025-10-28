@@ -36,6 +36,32 @@ app.include_router(router)
 # WebSocket manager
 ws_manager = WebSocketManager()
 
+@app.websocket("/ws/parse")
+async def websocket_parse(websocket: WebSocket):
+    """WebSocket endpoint for real-time resume parsing"""
+    await websocket.accept()
+
+    try:
+        while True:
+            # Receive data from frontend
+            data = await websocket.receive_json()
+
+            if data.get('type') == 'parse':
+                # Handle parsing with real-time progress
+                await ws_manager.handle_parse(websocket, data)
+
+    except WebSocketDisconnect:
+        print("Client disconnected from parse")
+    except Exception as e:
+        print(f"Parse WebSocket error: {e}")
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "message": str(e)
+            })
+        except:
+            pass
+
 @app.websocket("/ws/optimize")
 async def websocket_optimize(websocket: WebSocket):
     """WebSocket endpoint for real-time resume optimization"""
@@ -69,7 +95,8 @@ async def root():
         "message": "Resume Optimizer API",
         "version": "1.0.0",
         "endpoints": {
-            "websocket": "/ws/optimize",
+            "websocket_parse": "/ws/parse",
+            "websocket_optimize": "/ws/optimize",
             "parse": "/api/parse-resume",
             "optimize": "/api/optimize",
             "health": "/api/health"

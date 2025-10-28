@@ -90,6 +90,134 @@ class WebSocketManager:
                 "message": str(e)
             })
 
+    async def handle_parse(self, websocket: WebSocket, data: dict):
+        """Handle resume parsing with REAL-TIME progress updates"""
+        try:
+            # Stage 1: Upload received (5%)
+            await self.send_progress(websocket, "uploading", 5, "📤 File received, preparing to extract text...")
+            await asyncio.sleep(0.2)
+
+            # Get file content
+            import base64
+            file_content = base64.b64decode(data['fileContent'])
+            file_type = data['fileType']
+
+            # Stage 2: Extracting text (15%)
+            if file_type == 'application/pdf':
+                await self.send_progress(websocket, "extracting", 15, "📄 Extracting text from PDF...")
+            elif 'word' in file_type.lower():
+                await self.send_progress(websocket, "extracting", 15, "📄 Extracting text from Word document...")
+            else:
+                await self.send_progress(websocket, "extracting", 15, "📄 Reading document text...")
+
+            # Create progress callback for parsing
+            # We'll use a sync wrapper that schedules the async call properly
+            progress_queue = []
+
+            def sync_progress_callback(progress, message):
+                """Sync callback that stores progress updates"""
+                progress_queue.append((progress, message))
+
+            async def send_queued_progress():
+                """Periodically send queued progress updates"""
+                while True:
+                    if progress_queue:
+                        progress, message = progress_queue.pop(0)
+                        await self.send_progress(websocket, "parsing", progress, message)
+                    await asyncio.sleep(0.1)
+
+            # Start the progress sender task
+            progress_task = asyncio.create_task(send_queued_progress())
+
+            try:
+                # Parse the file with progress updates (15% → 90%)
+                resume, extracted_text = await asyncio.to_thread(
+                    self.parser_service.parse_file,
+                    file_content,
+                    file_type,
+                    sync_progress_callback
+                )
+            finally:
+                # Cancel the progress sender task
+                progress_task.cancel()
+                try:
+                    await progress_task
+                except asyncio.CancelledError:
+                    pass
+
+                # Send any remaining queued progress
+                while progress_queue:
+                    progress, message = progress_queue.pop(0)
+                    await self.send_progress(websocket, "parsing", progress, message)
+
+            # Stage 3: Validating (92%)
+            await self.send_progress(websocket, "validating", 92, "✅ Validating extracted data...")
+            await asyncio.sleep(0.3)
+
+            # Detect data loss warnings (95%)
+            await self.send_progress(websocket, "validating", 95, "🔍 Checking for data completeness...")
+            await asyncio.sleep(0.2)
+
+            warnings = self._detect_data_loss(resume, extracted_text)
+
+            # Complete (100%)
+            await self.send_progress(websocket, "complete", 100, "🎉 Resume parsing complete!")
+
+            # Send final results
+            await websocket.send_json({
+                "type": "result",
+                "data": {
+                    "resume": json.loads(resume.model_dump_json()),
+                    "extractedText": extracted_text,
+                    "warnings": warnings
+                }
+            })
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            await websocket.send_json({
+                "type": "error",
+                "message": str(e)
+            })
+
+    def _detect_data_loss(self, resume, extracted_text: str) -> list:
+        """Detect potential data loss during parsing"""
+        warnings = []
+
+        # Count bullet points in original text
+        bullet_count = extracted_text.count('•') + extracted_text.count('-')
+
+        # Count description items in parsed resume
+        try:
+            parsed_bullets = sum(len(exp.description) for exp in resume.experience if hasattr(exp, 'description') and exp.description)
+        except Exception as e:
+            print(f"Warning: Could not count parsed bullets: {e}")
+            parsed_bullets = 0
+
+        if bullet_count > parsed_bullets * 1.5 and bullet_count > 5:
+            warnings.append(f"⚠️ Possible data loss: Found {bullet_count} bullet points in original but only {parsed_bullets} parsed")
+
+        # Check for common resume sections
+        required_sections = ['experience', 'education', 'skills']
+        for section in required_sections:
+            try:
+                section_data = getattr(resume, section, None)
+                if section.lower() in extracted_text.lower() and (not section_data or len(section_data) == 0):
+                    warnings.append(f"⚠️ '{section}' section found in text but not parsed")
+            except Exception as e:
+                print(f"Warning: Could not check section {section}: {e}")
+
+        # Check text length
+        try:
+            parsed_text_length = len(str(resume.model_dump()))
+            if len(extracted_text) > 500 and parsed_text_length < len(extracted_text) * 0.3:
+                warnings.append(f"⚠️ Parsed resume seems incomplete ({parsed_text_length} chars vs {len(extracted_text)} chars in original)")
+        except Exception as e:
+            print(f"Warning: Could not check text length: {e}")
+
+        return warnings
+
     async def send_progress(self, websocket: WebSocket, stage: str, progress: int, message: str):
         """Send progress update to frontend"""
         await websocket.send_json({

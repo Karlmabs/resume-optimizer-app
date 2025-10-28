@@ -19,12 +19,28 @@ class FileParserService:
             self.use_ai_parsing = False
             print("⚠️ Warning: OPENAI_API_KEY not set. Using fallback regex parsing (less reliable)")
 
-    def parse_file(self, file_content: bytes, file_type: str) -> tuple[Resume, str]:
+    def parse_file(self, file_content: bytes, file_type: str, progress_callback=None) -> tuple[Resume, str]:
         """Parse file content based on file type
+
+        Args:
+            file_content: The file content as bytes
+            file_type: The MIME type of the file
+            progress_callback: Optional async callback for progress updates (progress, message)
 
         Returns:
             tuple: (parsed_resume, extracted_text)
         """
+        # Helper to send progress updates
+        def send_progress(progress, message):
+            if progress_callback:
+                try:
+                    progress_callback(progress, message)
+                except Exception as e:
+                    print(f"Error sending progress: {e}")
+
+        # Extract text based on file type
+        send_progress(20, "📄 Extracting text from document...")
+
         if file_type == 'application/pdf':
             text = self._parse_pdf(file_content)
         elif file_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']:
@@ -33,6 +49,8 @@ class FileParserService:
             text = file_content.decode('utf-8')
         else:
             text = file_content.decode('utf-8')
+
+        send_progress(35, f"✅ Extracted {len(text)} characters from document")
 
         # Log extracted text for debugging
         print(f"\n{'='*80}")
@@ -45,9 +63,13 @@ class FileParserService:
 
         # Use AI-powered parsing if available, otherwise fallback to regex
         if self.use_ai_parsing:
-            resume = self._parse_with_ai(text)
+            send_progress(45, "🤖 Analyzing with AI...")
+            resume = self._parse_with_ai(text, progress_callback=send_progress)
+            send_progress(85, "✅ AI parsing complete")
         else:
+            send_progress(45, "📝 Parsing with pattern matching...")
             resume = self._parse_text_to_resume(text)
+            send_progress(85, "✅ Parsing complete")
 
         return resume, text
 
@@ -71,8 +93,11 @@ class FileParserService:
             text += paragraph.text + "\n"
         return text
 
-    def _parse_with_ai(self, text: str) -> Resume:
+    def _parse_with_ai(self, text: str, progress_callback=None) -> Resume:
         """Use AI (GPT-4) to intelligently parse resume text into structured JSON"""
+
+        if progress_callback:
+            progress_callback(50, "🧠 Sending to AI for intelligent parsing...")
 
         prompt = f"""You are an EXPERT resume parser with ZERO TOLERANCE for data loss. Your job is to extract EVERY SINGLE DETAIL from this resume with PERFECT accuracy.
 
@@ -164,6 +189,9 @@ The parsed resume should contain AT LEAST 80% of the character count of the orig
 Return ONLY the valid JSON object, no additional text."""
 
         try:
+            if progress_callback:
+                progress_callback(55, "⏳ Waiting for AI response...")
+
             response = self.client.chat.completions.create(
                 model="gpt-4-turbo-preview",  # Can also use "gpt-3.5-turbo" for cost savings
                 messages=[
@@ -174,8 +202,14 @@ Return ONLY the valid JSON object, no additional text."""
                 response_format={"type": "json_object"}
             )
 
+            if progress_callback:
+                progress_callback(70, "📥 Received AI response, processing...")
+
             result = json.loads(response.choices[0].message.content)
             print(f"✅ Successfully parsed AI response")
+
+            if progress_callback:
+                progress_callback(75, "🔧 Normalizing data structures...")
 
             # Validate and ensure required fields exist
             if not result.get('contact'):
