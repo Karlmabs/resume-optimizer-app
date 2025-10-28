@@ -30,7 +30,7 @@ class AIService:
         if progress_callback:
             await progress_callback(70, "Preparing AI optimization prompt...")
 
-        prompt = f"""You are an AGGRESSIVE resume transformation expert. Your goal is to transform this resume to make the candidate appear as the PERFECT match for the job, even if their background isn't a perfect fit originally.
+        prompt = f"""You are an ETHICAL resume optimization expert. Your goal is to help the candidate present their ACTUAL experience and skills in the most professional and compelling way, while maintaining complete honesty.
 
 🎯 TARGET JOB DESCRIPTION:
 {job_description}
@@ -38,104 +38,121 @@ class AIService:
 📄 CURRENT RESUME:
 {resume_json}
 
-🚀 TRANSFORMATION INSTRUCTIONS (BE VERY AGGRESSIVE):
+📋 ETHICAL OPTIMIZATION INSTRUCTIONS:
 
-1. **SUMMARY - COMPLETE REWRITE**:
-   - Write a compelling summary that mirrors the job requirements EXACTLY
-   - Use keywords from the job description heavily
-   - Position the candidate as an expert in what the job needs
-   - Make it sound like this job was made for them
+1. **SUMMARY - PROFESSIONAL REWRITE**:
+   - Rewrite the summary to emphasize aspects of their experience relevant to this role
+   - Use professional language and keywords from the job description
+   - Focus on ACTUAL strengths and achievements
+   - Be compelling but truthful
 
-2. **SKILLS - ADD WHAT'S MISSING**:
-   - Extract ALL technical skills, tools, frameworks, and methodologies from the job description
-   - ADD these skills to the resume even if they're not currently listed
-   - Reorganize skills to put job-relevant ones FIRST
-   - Create skill categories that match the job requirements
-   - Include specific versions, certifications, or proficiency levels mentioned in the job
-   - If the job mentions "AWS, Docker, Kubernetes" - ADD THEM to skills
-   - If the job mentions "Agile, Scrum, CI/CD" - ADD THEM to skills
-   - Be comprehensive - add everything the job asks for
+2. **SKILLS - ARTICULATE WHAT THEY HAVE**:
+   - Review their experience descriptions to identify IMPLIED technical skills they've actually used
+   - Example: If they mention "deployed services with Docker", then Docker is a legitimate skill
+   - Reorganize skills to prioritize those relevant to the job
+   - Use industry-standard terminology for technologies they've worked with
+   - Create skill categories that make sense for their background
+   - **CRITICAL**: Only include skills that can be reasonably inferred from their actual work experience
+   - **NEVER**: Add skills not evidenced in their resume
 
-3. **EXPERIENCE - AGGRESSIVE REWRITING**:
-   - REWRITE each experience bullet to highlight aspects relevant to this job
-   - ADD quantified achievements (percentages, numbers, metrics) that sound impressive
-   - Use action verbs that match the job description (led, architected, optimized, implemented, etc.)
-   - Emphasize technologies and methodologies mentioned in the job
-   - If the job needs "Python", make sure Python is mentioned in multiple experience bullets
-   - If the job needs "team leadership", add bullets about leading teams/projects
-   - Transform generic bullets into specific, impressive achievements
+3. **EXPERIENCE - PROFESSIONAL ENHANCEMENT**:
+   - Rewrite bullets to emphasize job-relevant aspects of their ACTUAL work
+   - Use strong action verbs (led, implemented, optimized, developed, etc.)
+   - If they mention results, help quantify them REALISTICALLY based on context clues
+   - Highlight technologies and methodologies relevant to the target job
+   - Make connections between their past work and job requirements
    - Example transformation:
      - Before: "Worked on web applications"
-     - After: "Architected and deployed scalable microservices handling 50K+ daily users, reducing response time by 40% using Docker and Kubernetes"
+     - After (if evidenced): "Developed and maintained web applications using [technologies actually mentioned]"
+     - NOT: "Architected microservices handling 50K users" (unless there's evidence of this scale/role)
 
-4. **EDUCATION - ENHANCE IF NEEDED**:
-   - Highlight relevant coursework matching the job
-   - Add relevant projects or thesis topics
-   - Mention honors or achievements if applicable
+4. **EDUCATION - RELEVANT EMPHASIS**:
+   - Highlight coursework, projects, or achievements relevant to the job
+   - Keep all information factual and verifiable
 
-5. **KEYWORD OPTIMIZATION FOR ATS**:
-   - Ensure EVERY major keyword from the job description appears in the resume
-   - Use exact phrases from the job description when possible
-   - Include acronyms AND full terms (e.g., "CI/CD (Continuous Integration/Continuous Deployment)")
+5. **SKILL GAP ANALYSIS**:
+   - Identify critical skills required by the job that are NOT present in the resume
+   - Categorize gaps by importance: critical, important, nice-to-have
+   - Suggest learning paths for each gap (courses, certifications, resources)
+   - Estimate realistic time to acquire each skill
 
-6. **MAKE THE MATCH SCORE HIGH**:
-   - Your goal is to achieve a match score of 90-100%
-   - This resume should look like it was written FOR this specific job
+6. **HONEST MATCH SCORING**:
+   - Calculate a REALISTIC match percentage based on actual skill overlap
+   - Do NOT inflate the score
+   - Scores of 60-75% are perfectly acceptable and honest
+   - Calculate a "potential score" showing what they could achieve after addressing gaps
 
-⚠️ IMPORTANT RULES:
-- Keep the same employment timeline (dates, companies, positions)
-- Keep the education institutions and degrees
-- Don't fabricate entire new jobs or degrees
-- BUT you CAN and SHOULD:
-  ✓ ADD skills from the job description
-  ✓ REWRITE experience bullets to emphasize relevant work
-  ✓ ADD quantified achievements and metrics
-  ✓ TRANSFORM how experiences are described
-  ✓ Make the candidate sound like an expert in what the job needs
+⚠️ ETHICAL REQUIREMENTS:
+- Maintain complete factual accuracy
+- Only include skills they've demonstrably used
+- Don't fabricate achievements or metrics
+- Don't add technologies they haven't worked with
+- Keep employment timeline, companies, positions exactly as provided
+- Keep education exactly as provided
+- Be honest about match score even if it's lower
 
-🚨 CRITICAL - YOU MUST RETURN THESE FIELDS:
-- "matchScore": Calculate a realistic match percentage (0-100) based on how well the optimized resume matches the job
-- "matchedKeywords": Extract ALL important keywords from the job description that now appear in the optimized resume (minimum 10 keywords)
+🎯 CONFIDENCE LEVELS FOR CHANGES:
+Mark each change with appropriate confidence:
+- "verified": Based directly on resume content (rephrasing, reorganizing)
+- "inferred": Reasonably implied from their work (e.g., if they deployed Docker containers, Docker is a skill)
+- "suggested": NOT used for optimization - only for skillGaps section
 
+🚨 REQUIRED RESPONSE FIELDS:
 Return ONLY valid JSON with ALL required fields:
 {{
   "optimizedResume": {{
-    "contact": {{...}},
-    "summary": "COMPLETELY rewritten summary...",
+    "contact": {{...same as original...}},
+    "summary": "Professionally rewritten summary emphasizing relevant actual experience...",
     "experience": [
       {{
         "id": "exp1",
         "company": "Same company name",
         "position": "Same position",
-        "location": "...",
+        "location": "Same location",
         "startDate": "Same dates",
         "endDate": "Same dates",
         "description": [
-          "COMPLETELY REWRITTEN bullet with job-relevant keywords and metrics",
-          "Another TRANSFORMED bullet emphasizing what the job needs",
-          "New bullet highlighting relevant technologies from job description"
+          "Professionally rewritten bullet based on their actual work",
+          "Another enhanced bullet highlighting relevant actual achievements",
+          "Focus on what they REALLY did, using better terminology"
         ]
       }}
     ],
-    "education": [...],
+    "education": [...same as original...],
     "skills": [
       {{
-        "category": "Technical Skills (or category matching job)",
-        "items": ["EXPANDED list including ALL skills from job description"]
+        "category": "Technical Skills",
+        "items": ["Only skills they've actually used, reorganized for relevance"]
       }}
     ]
   }},
   "changes": [
-    {{"section": "Summary", "type": "modified", "description": "Completely rewritten to mirror job requirements"}},
-    {{"section": "Skills", "type": "added", "description": "Added [list specific skills] to match job requirements"}},
-    {{"section": "Experience", "type": "modified", "description": "Transformed all bullets to emphasize [relevant aspects]"}},
+    {{"section": "Summary", "type": "modified", "description": "Rewritten to emphasize [specific relevant aspects]", "confidence": "verified"}},
+    {{"section": "Skills", "type": "modified", "description": "Added [skill] based on work with [specific project/technology mentioned]", "confidence": "inferred"}},
+    {{"section": "Experience", "type": "modified", "description": "Enhanced bullets to highlight [specific relevant work]", "confidence": "verified"}},
     ...
   ],
-  "matchedKeywords": ["REQUIRED: Python", "JavaScript", "React", "AWS", "Docker", "Leadership", "etc - minimum 10 keywords"],
-  "matchScore": 95
+  "matchedKeywords": ["All keywords from job that genuinely appear in their experience"],
+  "matchScore": 72,  // HONEST score - don't inflate!
+  "potentialScore": 88,  // What they could achieve after learning skill gaps
+  "skillGaps": [
+    {{
+      "skill": "Kubernetes",
+      "importance": "critical",
+      "learningPath": "Complete 'Kubernetes for Developers' course on Udemy or Linux Foundation CKA certification. Practice with minikube locally.",
+      "estimatedTime": "4-6 weeks with dedicated practice"
+    }},
+    {{
+      "skill": "GraphQL",
+      "importance": "important",
+      "learningPath": "Complete GraphQL documentation and build a sample project. 'How to GraphQL' tutorial is excellent.",
+      "estimatedTime": "2-3 weeks"
+    }},
+    ...
+  ]
 }}
 
-🎯 GOAL: Transform this resume to make the candidate appear as the PERFECT, IDEAL candidate for this exact job. Be aggressive. Be bold. Make them stand out."""
+🎯 GOAL: Help the candidate present their best authentic self. Optimize presentation while maintaining complete honesty. Provide a realistic path to becoming a stronger candidate."""
 
         if progress_callback:
             await progress_callback(72, "Analyzing resume structure and job requirements...")
@@ -147,10 +164,10 @@ Return ONLY valid JSON with ALL required fields:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are an AGGRESSIVE resume transformation expert who rewrites resumes to make candidates appear as perfect matches for jobs. You add relevant skills, rewrite experience bullets with impressive metrics, and optimize for ATS systems. Always return valid JSON."},
+                {"role": "system", "content": "You are an ETHICAL resume optimization expert who helps candidates present their actual experience professionally. You NEVER fabricate skills or achievements. You focus on articulating what they've genuinely done using professional language. You provide honest match scores and helpful skill gap analysis. Always return valid JSON."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.8,  # Higher temperature for more creative/aggressive transformations
+            temperature=0.3,  # Lower temperature for more conservative, factual optimization
             response_format={"type": "json_object"}
         )
 
@@ -166,15 +183,23 @@ Return ONLY valid JSON with ALL required fields:
         if 'matchedKeywords' not in result or not result.get('matchedKeywords'):
             raise ValueError("AI response missing matchedKeywords - this is required for keyword analysis")
 
-        # Extract keywords from job description (only used as backup if AI completely fails)
+        # Extract keywords from job description
         keywords = result.get('matchedKeywords', [])
 
+        # Ensure skillGaps defaults to empty list if not provided
+        skill_gaps = result.get('skillGaps', [])
+        potential_score = result.get('potentialScore', None)
+
         # Build OptimizedResume with AI-computed values
+        from models.schemas import SkillGap
+
         optimized_resume = OptimizedResume(
             **result['optimizedResume'],
             changes=[ResumeChange(**change) for change in result.get('changes', [])],
-            matchScore=result['matchScore'],  # No fallback - AI MUST provide this
-            matchedKeywords=result['matchedKeywords']  # No fallback - AI MUST provide this
+            matchScore=result['matchScore'],
+            matchedKeywords=result['matchedKeywords'],
+            skillGaps=[SkillGap(**gap) for gap in skill_gaps] if skill_gaps else [],
+            potentialScore=potential_score
         )
 
         return optimized_resume, keywords
@@ -202,7 +227,7 @@ Return ONLY valid JSON with ALL required fields:
         if progress_callback:
             await progress_callback(85, "Preparing cover letter prompt...")
 
-        prompt = f"""You are an EXPERT cover letter writer specializing in creating COMPELLING, PERSUASIVE cover letters that make candidates irresistible to employers.
+        prompt = f"""You are a professional cover letter writer who helps candidates create honest, compelling cover letters based on their actual experience and qualifications.
 
 🎯 TARGET POSITION:
 Job Title: {job_title}
@@ -211,74 +236,75 @@ Company: {company}
 📋 JOB DESCRIPTION:
 {job_description}
 
-👤 CANDIDATE'S OPTIMIZED RESUME (already tailored for this job):
+👤 CANDIDATE'S OPTIMIZED RESUME:
 {resume_json}
 
 ✍️ COVER LETTER REQUIREMENTS:
 
-Write a POWERFUL cover letter that makes the hiring manager excited to interview this candidate. Be CONFIDENT and COMPELLING.
+Write a professional, genuine cover letter that authentically represents the candidate's experience and interest in the role.
 
-**OPENING PARAGRAPH (Hook them immediately):**
-- Start with something that grabs attention (impressive achievement, passion for their mission, or bold statement)
-- Make them WANT to keep reading
-- Show you know about the company and role
-- Position yourself as the solution to their needs
-- Example: "When I successfully architected a microservices platform that reduced deployment time by 75% and saved $2M annually, I realized my passion lies in solving exactly the kind of challenges your team faces at {company}."
+**OPENING PARAGRAPH (Professional Introduction):**
+- Express genuine interest in the role and company
+- Briefly introduce your relevant background
+- Make a clear connection between your experience and the role
+- Be authentic and professional, not overly bold
 
-**BODY PARAGRAPHS (2-3 paragraphs - Make them see you're perfect):**
+**BODY PARAGRAPHS (2-3 paragraphs - Show Relevant Experience):**
 
-Paragraph 1 - Technical Excellence:
-- Highlight 2-3 specific achievements from the resume that directly match job requirements
-- Use METRICS and NUMBERS from the resume (percentages, dollar amounts, scale)
-- Show you have the exact skills they need
-- Use confident language: "I have proven expertise in...", "I have successfully...", "My track record includes..."
+Paragraph 1 - Relevant Experience & Skills:
+- Highlight 2-3 specific, REAL achievements from the resume that match job requirements
+- Reference actual technologies and methodologies from their experience
+- Use professional language: "In my experience as...", "I have developed skills in...", "At [Company], I..."
+- Only mention metrics that appear in the resume
 
-Paragraph 2 - Perfect Fit:
-- Explain WHY you're perfect for THIS specific role at THIS company
-- Show you understand their challenges and have solved similar problems
-- Reference specific technologies/methodologies they mentioned
-- Demonstrate cultural fit and enthusiasm
+Paragraph 2 - Job Alignment:
+- Explain why you're interested in THIS specific role at THIS company
+- Connect your actual experience to the job requirements
+- Show you understand what they're looking for
+- Be genuine about your interest and fit
 
-Paragraph 3 (Optional) - Value Proposition:
-- What unique value will you bring?
-- How will you make an impact in the first 90 days?
-- Show vision and initiative
+Paragraph 3 (Optional) - Growth & Contribution:
+- Express willingness to learn and grow in areas where you may have gaps
+- Mention how you can contribute based on your actual strengths
+- Show enthusiasm for the opportunity
 
-**CLOSING PARAGRAPH (Strong call to action):**
-- Express strong interest in discussing how you can contribute
-- Mention you're excited about specific aspects of the role
-- Confident but not arrogant
-- Clear call to action: "I would welcome the opportunity to discuss..."
+**CLOSING PARAGRAPH (Professional Close):**
+- Express interest in discussing the opportunity further
+- Mention availability for an interview
+- Thank them for their consideration
+- Professional and courteous tone
 
 📏 LENGTH: 3-4 paragraphs total (not including greeting/signature)
 
 🎨 TONE:
-- Confident and compelling, NOT humble or tentative
-- Professional but enthusiastic
-- Show personality while staying professional
-- Use active voice and strong action verbs
+- Professional and genuine
+- Confident but humble
+- Enthusiastic without being over-the-top
+- Honest about fit and interest
+- Use clear, straightforward language
 
-⚠️ IMPORTANT:
-- Reference SPECIFIC achievements from the resume (with metrics!)
-- Mirror keywords from the job description naturally
-- Make it feel personal to this company and role, not generic
-- Show passion and genuine interest
-- Make the hiring manager think "We NEED to interview this person!"
+⚠️ CRITICAL REQUIREMENTS:
+- Only reference achievements that are actually in the resume
+- Don't exaggerate or embellish their experience
+- Be honest about skills and experience level
+- Make connections based on real work they've done
+- Don't claim expertise they don't have
+- Keep it genuine and professional
 
 Return ONLY valid JSON:
 {{
   "greeting": "Dear Hiring Manager," (or specific name if in job description),
-  "opening": "Attention-grabbing opening paragraph that hooks the reader...",
+  "opening": "Professional opening expressing genuine interest and relevant background...",
   "body": [
-    "Body paragraph 1: Technical excellence with specific achievements and metrics from resume...",
-    "Body paragraph 2: Perfect fit - why you're ideal for THIS role at THIS company...",
-    "Body paragraph 3 (optional): Additional value proposition or unique angle..."
+    "Body paragraph 1: Specific real achievements from resume relevant to the role...",
+    "Body paragraph 2: Genuine explanation of why this role interests them and how their experience aligns...",
+    "Body paragraph 3 (optional): Contribution they can make and willingness to grow..."
   ],
-  "closing": "Strong closing with clear call to action and enthusiasm...",
+  "closing": "Professional closing expressing interest in further discussion...",
   "signature": "Sincerely,\\n{resume.contact.name}"
 }}
 
-🎯 GOAL: Write a cover letter so compelling that the hiring manager immediately wants to interview this candidate. Make them feel like they'd be crazy NOT to hire this person!"""
+🎯 GOAL: Write an honest, professional cover letter that accurately represents the candidate's qualifications and genuine interest in the role."""
 
         if progress_callback:
             await progress_callback(88, "🤖 AI is crafting your compelling cover letter...")
@@ -286,10 +312,10 @@ Return ONLY valid JSON:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are a master cover letter writer who creates COMPELLING, PERSUASIVE letters that make candidates irresistible. You write with confidence, use specific metrics, and create excitement. Always return valid JSON."},
+                {"role": "system", "content": "You are a professional cover letter writer who creates honest, well-written cover letters based on candidates' actual experience. You NEVER exaggerate or fabricate achievements. You write genuinely and professionally. Always return valid JSON."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.85,  # Slightly higher for more creative, compelling writing
+            temperature=0.5,  # Moderate temperature for professional, grounded writing
             response_format={"type": "json_object"}
         )
 

@@ -46,11 +46,20 @@ class ResumeChange(BaseModel):
     section: str
     type: str  # 'added', 'modified', 'reordered'
     description: str
+    confidence: Optional[str] = 'verified'  # 'verified', 'inferred', 'suggested'
+
+class SkillGap(BaseModel):
+    skill: str
+    importance: str  # 'critical', 'important', 'nice-to-have'
+    learningPath: str  # Suggested resources or approach
+    estimatedTime: Optional[str] = None  # e.g., "2-4 weeks"
 
 class OptimizedResume(Resume):
     changes: List[ResumeChange]
     matchScore: int
     matchedKeywords: List[str]
+    skillGaps: Optional[List[SkillGap]] = []
+    potentialScore: Optional[int] = None  # Score user could achieve after learning gaps
 
 class CoverLetter(BaseModel):
     greeting: str

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, Eye, FileText, Mail, FileCode, AlertTriangle } from 'lucide-react';
+import { RotateCcw, Eye, FileText, Mail, FileCode, AlertTriangle, TrendingUp, BookOpen, Clock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { OptimizedResume, CoverLetter, Resume } from '@/types';
 import ResumeDisplay from './ResumeDisplay';
@@ -113,10 +113,38 @@ export default function ResultsPage({
           </motion.button>
         </motion.div>
 
+        {/* Ethical Disclaimer Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-5 rounded-xl bg-blue-500/10 border border-blue-500/30"
+        >
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-blue-300 mb-2">
+                📋 Please Review Carefully - Your Responsibility
+              </h3>
+              <p className="text-sm text-blue-200/80 mb-2">
+                This resume has been optimized to present your actual experience professionally. However, you must verify that:
+              </p>
+              <ul className="text-sm text-blue-200/80 space-y-1 ml-4 list-disc">
+                <li>All skills listed are ones you can demonstrate in interviews</li>
+                <li>All achievements and metrics accurately reflect your work</li>
+                <li>Nothing has been added that you cannot support with examples</li>
+              </ul>
+              <p className="text-xs text-blue-300/70 mt-3 font-medium">
+                ⚠️ Only apply with information you can honestly discuss and defend. Review the "Changes Summary" below to see what was modified.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Changes Summary */}
         <ChangesSummary
           changes={optimizedResume.changes}
           matchScore={optimizedResume.matchScore}
+          potentialScore={optimizedResume.potentialScore}
         />
 
         {/* Keyword Match */}
@@ -125,6 +153,89 @@ export default function ResultsPage({
           totalKeywords={jobKeywords}
           matchScore={optimizedResume.matchScore}
         />
+
+        {/* Skill Gaps Section */}
+        {optimizedResume.skillGaps && optimizedResume.skillGaps.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <div className="glass-strong rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <TrendingUp className="w-6 h-6 text-yellow-400" />
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-200">
+                    Skills to Develop
+                  </h2>
+                  <p className="text-sm text-slate-400">
+                    Strengthen your application by learning these skills
+                    {optimizedResume.potentialScore && (
+                      <span className="text-green-400 font-medium ml-2">
+                        (Could reach {optimizedResume.potentialScore}% match)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {optimizedResume.skillGaps.map((gap, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`p-4 rounded-xl border ${
+                      gap.importance === 'critical'
+                        ? 'bg-red-500/5 border-red-500/30'
+                        : gap.importance === 'important'
+                        ? 'bg-orange-500/5 border-orange-500/30'
+                        : 'bg-yellow-500/5 border-yellow-500/30'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className={`font-semibold ${
+                        gap.importance === 'critical' ? 'text-red-300' :
+                        gap.importance === 'important' ? 'text-orange-300' :
+                        'text-yellow-300'
+                      }`}>
+                        {gap.skill}
+                      </h3>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        gap.importance === 'critical'
+                          ? 'bg-red-500/20 text-red-300'
+                          : gap.importance === 'important'
+                          ? 'bg-orange-500/20 text-orange-300'
+                          : 'bg-yellow-500/20 text-yellow-300'
+                      }`}>
+                        {gap.importance}
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-2 mb-3">
+                      <BookOpen className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-slate-300">{gap.learningPath}</p>
+                    </div>
+
+                    {gap.estimatedTime && (
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <Clock className="w-3 h-3" />
+                        <span>{gap.estimatedTime}</span>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                <p className="text-xs text-slate-400">
+                  💡 <strong className="text-slate-300">Tip:</strong> Focus on critical skills first. You can still apply now and mention you're actively learning these skills in your cover letter.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-4 mb-6">

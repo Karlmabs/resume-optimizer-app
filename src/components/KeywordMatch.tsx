@@ -22,25 +22,41 @@ export default function KeywordMatch({
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-            <Target className="w-5 h-5 text-green-400" />
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            matchScore >= 75 ? 'bg-green-500/20' :
+            matchScore >= 60 ? 'bg-yellow-500/20' :
+            'bg-orange-500/20'
+          }`}>
+            <Target className={`w-5 h-5 ${
+              matchScore >= 75 ? 'text-green-400' :
+              matchScore >= 60 ? 'text-yellow-400' :
+              'text-orange-400'
+            }`} />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-200">
-              Keyword Match Analysis
+              Qualification Match Analysis
             </h3>
             <p className="text-sm text-slate-400">
-              {matchedKeywords.length} of {totalKeywords.length} keywords matched
+              {matchedKeywords.length} of {totalKeywords.length} key qualifications present
             </p>
           </div>
         </div>
 
         <div className="text-right">
-          <div className="flex items-center gap-2 text-3xl font-bold text-green-400">
+          <div className={`flex items-center gap-2 text-3xl font-bold ${
+            matchScore >= 75 ? 'text-green-400' :
+            matchScore >= 60 ? 'text-yellow-400' :
+            'text-orange-400'
+          }`}>
             <TrendingUp className="w-6 h-6" />
             {matchScore}%
           </div>
-          <p className="text-xs text-slate-500">Match Score</p>
+          <p className="text-xs text-slate-500">
+            {matchScore >= 75 ? 'Strong match!' :
+             matchScore >= 60 ? 'Good foundation' :
+             'Room to grow'}
+          </p>
         </div>
       </div>
 
@@ -48,7 +64,11 @@ export default function KeywordMatch({
       <div className="mb-6">
         <div className="h-3 bg-slate-700/50 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
+            className={`h-full ${
+              matchScore >= 75 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              matchScore >= 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
+              'bg-gradient-to-r from-orange-500 to-red-500'
+            }`}
             initial={{ width: 0 }}
             animate={{ width: `${matchScore}%` }}
             transition={{ duration: 1.5, ease: "easeOut" }}
@@ -57,7 +77,7 @@ export default function KeywordMatch({
       </div>
 
       {/* Keywords */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mb-4">
         {totalKeywords.map((keyword, index) => {
           const isMatched = matchedKeywords.includes(keyword);
 
@@ -83,6 +103,14 @@ export default function KeywordMatch({
             </motion.span>
           );
         })}
+      </div>
+
+      {/* Helpful note */}
+      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+        <p className="text-xs text-slate-400">
+          💡 <strong className="text-slate-300">Note:</strong> This score reflects qualifications genuinely present in your resume.
+          {matchScore < 75 && ' Check the "Skills to Develop" section above for ways to strengthen your application.'}
+        </p>
       </div>
     </motion.div>
   );

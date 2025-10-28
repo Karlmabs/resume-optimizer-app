@@ -1,15 +1,16 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Sparkles, Plus, Edit, ArrowRight } from 'lucide-react';
+import { Sparkles, Plus, Edit, ArrowRight, Shield, AlertTriangle, HelpCircle } from 'lucide-react';
 import { ResumeChange } from '@/types';
 
 interface ChangesSummaryProps {
   changes: ResumeChange[];
   matchScore: number;
+  potentialScore?: number;
 }
 
-export default function ChangesSummary({ changes, matchScore }: ChangesSummaryProps) {
+export default function ChangesSummary({ changes, matchScore, potentialScore }: ChangesSummaryProps) {
   const getChangeIcon = (type: string) => {
     switch (type) {
       case 'added':
@@ -32,6 +33,45 @@ export default function ChangesSummary({ changes, matchScore }: ChangesSummaryPr
     }
   };
 
+  const getConfidenceIcon = (confidence?: string) => {
+    switch (confidence) {
+      case 'verified':
+        return <Shield className="w-3 h-3 text-green-400" />;
+      case 'inferred':
+        return <AlertTriangle className="w-3 h-3 text-yellow-400" />;
+      case 'suggested':
+        return <HelpCircle className="w-3 h-3 text-orange-400" />;
+      default:
+        return <Shield className="w-3 h-3 text-green-400" />;
+    }
+  };
+
+  const getConfidenceLabel = (confidence?: string) => {
+    switch (confidence) {
+      case 'verified':
+        return 'Verified from resume';
+      case 'inferred':
+        return 'Inferred from work';
+      case 'suggested':
+        return 'Suggested - please verify';
+      default:
+        return 'Verified';
+    }
+  };
+
+  const getConfidenceColor = (confidence?: string) => {
+    switch (confidence) {
+      case 'verified':
+        return 'bg-green-500/10 border-green-500/30 text-green-300';
+      case 'inferred':
+        return 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300';
+      case 'suggested':
+        return 'bg-orange-500/10 border-orange-500/30 text-orange-300';
+      default:
+        return 'bg-green-500/10 border-green-500/30 text-green-300';
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -50,16 +90,27 @@ export default function ChangesSummary({ changes, matchScore }: ChangesSummaryPr
         <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-500/30">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Match Score</p>
+              <p className="text-sm text-slate-400 mb-1">Current Match Score</p>
               <p className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
                 {matchScore}%
               </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Based on your actual qualifications
+              </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-slate-400 mb-1">Optimization Level</p>
+              <p className="text-sm text-slate-400 mb-1">Match Level</p>
               <p className="text-lg font-semibold text-violet-400">
-                {matchScore >= 90 ? 'Excellent' : matchScore >= 75 ? 'Very Good' : 'Good'}
+                {matchScore >= 90 ? 'Excellent Match' :
+                 matchScore >= 75 ? 'Strong Match' :
+                 matchScore >= 60 ? 'Good Match' :
+                 'Consider Skill Development'}
               </p>
+              {potentialScore && potentialScore > matchScore && (
+                <p className="text-xs text-green-400 mt-1">
+                  Could reach {potentialScore}% with training
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -83,17 +134,33 @@ export default function ChangesSummary({ changes, matchScore }: ChangesSummaryPr
                   {getChangeIcon(change.type)}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-sm font-semibold text-slate-200">
                       {change.section}
                     </span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${getChangeColor(change.type)}`}>
                       {change.type}
                     </span>
+                    {change.confidence && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 ${getConfidenceColor(change.confidence)}`} title={getConfidenceLabel(change.confidence)}>
+                        {getConfidenceIcon(change.confidence)}
+                        {change.confidence}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-slate-400">
                     {change.description}
                   </p>
+                  {change.confidence === 'inferred' && (
+                    <p className="text-xs text-yellow-400/70 mt-1">
+                      ℹ️ This was inferred from your actual work - please verify accuracy
+                    </p>
+                  )}
+                  {change.confidence === 'suggested' && (
+                    <p className="text-xs text-orange-400/70 mt-1">
+                      ⚠️ Suggested addition - only include if you actually have this experience
+                    </p>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -103,9 +170,9 @@ export default function ChangesSummary({ changes, matchScore }: ChangesSummaryPr
         {/* Bottom Note */}
         <div className="mt-6 p-4 rounded-xl bg-violet-500/10 border border-violet-500/20">
           <p className="text-xs text-slate-400">
-            <span className="font-semibold text-violet-400">✨ AI-Powered Optimization:</span>{' '}
-            Your resume has been intelligently transformed to match the job requirements perfectly,
-            including skills enhancement, experience rewriting, and ATS keyword optimization.
+            <span className="font-semibold text-violet-400">✨ Professional Optimization:</span>{' '}
+            Your resume has been professionally reworded to emphasize relevant experience and skills from your actual background.
+            All changes are based on content present in your original resume. Please review carefully and ensure everything is accurate.
           </p>
         </div>
       </div>

@@ -56,12 +56,22 @@ export interface OptimizedResume extends Resume {
   changes: ResumeChange[];
   matchScore: number;
   matchedKeywords: string[];
+  skillGaps?: SkillGap[];
+  potentialScore?: number;
 }
 
 export interface ResumeChange {
   section: string;
   type: 'added' | 'modified' | 'reordered';
   description: string;
+  confidence?: 'verified' | 'inferred' | 'suggested';
+}
+
+export interface SkillGap {
+  skill: string;
+  importance: 'critical' | 'important' | 'nice-to-have';
+  learningPath: string;
+  estimatedTime?: string;
 }
 
 export interface CoverLetter {
