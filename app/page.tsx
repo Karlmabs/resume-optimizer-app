@@ -139,9 +139,11 @@ export default function Home() {
           setProgress(message.progress);
           setStage(message.message);
         } else if (message.type === 'result') {
-          setOptimizedResume(message.data.optimizedResume);
-          setCoverLetter(message.data.coverLetter);
-          setJobKeywords(message.data.jobKeywords);
+          // Type assertion for optimization result
+          const data = message.data as { optimizedResume: OptimizedResume; coverLetter: CoverLetter; jobKeywords: string[] };
+          setOptimizedResume(data.optimizedResume);
+          setCoverLetter(data.coverLetter);
+          setJobKeywords(data.jobKeywords);
           setAppState('results');
           wsService.disconnect();
         } else if (message.type === 'error') {
